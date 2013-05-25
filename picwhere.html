@@ -1,19 +1,19 @@
 <html>
 <head>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
-	<style>
-		body {
-			padding:0;
-			margin:0;
-			background-color:black;
-			overflow:hidden;
-			}
-		#loader {
-			height:0;
-			width:0;
-			overflow:hidden;
-		}
+    <style>
+        body {
+            padding:0;
+            margin:0;
+            background-color:black;
+            overflow:hidden;
+            }
+        #loader {
+            height:0;
+            width:0;
+            overflow:hidden;
+        }
         #pic {
             color:white;
         }
@@ -33,7 +33,7 @@
             font-size:50px;
             color:blue;
         }
-	</style>
+    </style>
 </head>
 <body>
 <center>
@@ -46,7 +46,11 @@
 <script>
 
 function search(x,y,s) {
-    // Use the Panoramio API to search for photos within a box
+    /* Use Panoramio to search for photos within a box
+
+    This is the Data API, not the Widget API
+    http://www.panoramio.com/api/data/api.html
+    */
     var url = "http://www.panoramio.com/map/get_panoramas.php";
     var data = {
         order:"upload_date",
@@ -74,8 +78,8 @@ var search_point = {lon:Math.random() * 180,lat:Math.random() * 180 - 90};
 console.log(search_point);
 
 function gotphotos(x){
-    // Panoramio has responded
-	if (x.photos.length>0){
+    /* My callback for the Panoramio Data API */
+    if (x.photos.length>0){
         // We got some photos!
         // just grab the first (it might be better to grab the closest)
         var pic = x.photos[0];
@@ -92,84 +96,90 @@ function gotphotos(x){
         $('#pic').click(function(){
             show_centered_map(pic.latitude,pic.longitude);
         });
-	} else {
-		// No photos here, go larger
-		zoom*=2;
-		search(search_point.lon, search_point.lat, zoom);
-	}
+    } else {
+        // No photos here, go larger
+        zoom*=2;
+        search(search_point.lon, search_point.lat, zoom);
+    }
 }
 
 
 var fullscreen = function(){
     /* Blow up an image as big as possible
        without adjusting the aspect ratio */
-	var thepic = $('#thepic');
-	var imagewidth = $(thepic).width();
-	var imageheight = $(thepic).height();
-	if (imagewidth==0){
-		setTimeout('fullscreen()',500);
-		return;
-	}
-	var browserwidth = $(window).width();
-	var browserheight = $(window).height();
-	var ratio = imageheight/imagewidth;
+    var thepic = $('#thepic');
+    var imagewidth = $(thepic).width();
+    var imageheight = $(thepic).height();
+    if (imagewidth==0){
+        // The image hasn't loaded yet, wait more
+        setTimeout('fullscreen()',100);
+        return;
+    }
+    var browserwidth = $(window).width();
+    var browserheight = $(window).height();
+    var ratio = imageheight/imagewidth;
 
     // #filler is a hack for vertical centering
-	if (browserheight > browserwidth){
-	    imageheight = browserheight;
-	    imagewidth = browserheight/ratio;
-	    if (browserwidth < imagewidth){
-	    	imagewidth = browserwidth;
-	    	imageheight = browserwidth * ratio;
-	    	$('#filler').height((browserheight-imageheight)/2);
-	    } else {
-	    	$('#filler').height(0);
-	    }
-	}
-	// When browser is wider
-	if (browserwidth >= browserheight){
-	    imagewidth = browserwidth;
-	    imageheight = browserwidth * ratio;
-	    if (browserheight < imageheight){
-	    	imageheight = browserheight;
-	    	imagewidth = browserheight/ratio;
-	    	$('#filler').height(0);
-	    } else {
+
+
+    if (browserheight > browserwidth){
+        // Case 1. Tall browser
+        imageheight = browserheight;
+        imagewidth = browserheight/ratio;
+        if (browserwidth < imagewidth){
+            imagewidth = browserwidth;
+            imageheight = browserwidth * ratio;
             $('#filler').height((browserheight-imageheight)/2);
-	    }
-	}
+        } else {
+            $('#filler').height(0);
+        }
+    } else {
+        // Case 2: Wide browser
+        imagewidth = browserwidth;
+        imageheight = browserwidth * ratio;
+        if (browserheight < imageheight){
+            imageheight = browserheight;
+            imagewidth = browserheight/ratio;
+            $('#filler').height(0);
+        } else {
+            $('#filler').height((browserheight-imageheight)/2);
+        }
+    }
     // empty the loader
-	$('#loader').html('');
+    $('#loader').html('');
+
     // there should be a better way to set this, but I am lazy
     var img_url = $(thepic).attr('src');
     var img = '<img style="width:'+imagewidth+'px;height:'+imageheight+'px" src="'+img_url+'">'
-	$('#pic').html(img + '<p id=message>Click to see location</p>');
+    $('#pic').html(img + '<p id=message>Click to see location</p>');
 }
 
 
 function show_centered_map(lat, lon) {
     /* Drop a pin on the map and center it */
     var picture_location = new google.maps.LatLng(lat, lon);
-    var marker;
-    var map;
+
     var mapOptions = {
         zoom: 2,
         mapTypeId: google.maps.MapTypeId.ROADMAP,
         center: picture_location,
     };
 
-    $('#map-canvas').css('display','block');
-    $('#centered_message').click(function(){
-        location.reload();
-    }).html('Go again?');
-    map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
+    var map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
 
-    marker = new google.maps.Marker({
+    var marker = new google.maps.Marker({
         map:map,
         draggable:false,
         animation: google.maps.Animation.DROP,
         position:  picture_location
     });
+
+    // show the map div
+    $('#map-canvas').css('display','block');
+
+    $('#centered_message').click(function(){
+        location.reload();
+    }).html('Go again?');
 }
 
 // start the search
