@@ -3,6 +3,8 @@ PicWhere
 
 A photo guessing "game"
 
+[Try it on rawgithub](http://rawgithub.com/mdonahoe/picwhere/master/picwhere.html)
+
 
 1. Generates a random Lat/Long pair (very naively).
 2. Uses the Panoramio API to grab a nearby photo.
